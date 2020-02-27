@@ -1,13 +1,38 @@
-import { declare } from "@babel/helper-plugin-utils";
-import { template, types as t } from "@babel/core";
+const { declare } = require("@babel/helper-plugin-utils");
+const { template, types: t } = require("@babel/core");
 
 const FAA_LINEBREAKS_NONE = 'none'
 const FAA_LINEBREAKS_ALL = 'all'
-const FAA_LINEBREAKS_ONE = 'one'
+const FAA_LINEBREAKS_DEFAULT = 'default'
+
+const reFAA = {
+  // RE
+  foreOne: /^\n/,
+  foreAll: /^[\n\t\s]+/,
+  aftOne: /\n$/,
+  aftAll: /[\n\t\s]+$/,
+  // Raw RE
+  foreRawOne: /^\\n/,
+  foreRawAll: /^[\\n\\t\\s]+/,
+  aftRawOne: /\\n$/,
+  aftRawAll: /[\\n\\t\\s]+$/,
+}
+
+const getStripRegexp = (isRaw, isAll) => {
+  let reFore = isRaw ? reFAA.foreRawOne : reFAA.foreOne
+  let reAft = isRaw ? reFAA.aftRawOne : reFAA.aftOne
+
+  if (isAll) {
+    reFore = isRaw ? reFAA.foreRawAll : reFAA.foreAll
+    reAft = isRaw ? reFAA.aftRawAll : reFAA.aftAll
+  }
+
+  return [reFore, reAft]
+}
 
 export default declare((api, options) => {
   api.assertVersion(7);
-  const { loose, stripForeAndAftLinebreaks = FAA_LINEBREAKS_ONE } = options;
+  const { loose, stripForeAndAftLinebreaks = FAA_LINEBREAKS_DEFAULT } = options;
 
   let helperName = "taggedTemplateLiteral";
   if (loose) helperName += "Loose";
@@ -47,33 +72,66 @@ export default declare((api, options) => {
     });
   }
 
-  function applyStripForeAndAftLinebreaks(strings) {
+  function matchOptionStripForeAndAftLinebreaks(...options) {
+    return options.some(current => current === stripForeAndAftLinebreaks)
+  }
+
+  function isSkipStripFAALinebreaks() {
+    return matchOptionStripForeAndAftLinebreaks(
+      FAA_LINEBREAKS_ALL, FAA_LINEBREAKS_DEFAULT) === false
+  }
+
+  function getStripFAALinebreaksRegExps() {
+    const [reFore, reAft] = getStripRegexp(false, matchOptionStripForeAndAftLinebreaks(FAA_LINEBREAKS_ALL))
+    const [reRawFore, reRawAft] = getStripRegexp(true, matchOptionStripForeAndAftLinebreaks(FAA_LINEBREAKS_ALL))
+    return [
+      reFore, reAft,
+      reRawFore, reRawAft
+    ]
+  }
+
+  function reStripElementValue(ele, re) {
+    if (ele && ele.type === 'StringLiteral') ele.value = ele.value.replace(re, '')
+  }
+
+  function applyStripForeAndAftLinebreaksTaggedTemplateExpression(strings, raws) {
     const len = strings.length
 
-    if (len === 0) {
-      return strings
+    if (len === 0 || isSkipStripFAALinebreaks()) {
+      return [strings, raws]
     }
 
-    // When FAA_LINEBREAKS_ALL or FAA_LINEBREAKS_ONE
-    if (stripForeAndAftLinebreaks === FAA_LINEBREAKS_ALL ||
-      stripForeAndAftLinebreaks === FAA_LINEBREAKS_ONE) {
-      const newStrings = [...strings]
-      let reFore = /^\n/
-      let reAft = /\n$/
+    const newStrings = [...strings]
+    const newRaws = [...raws]
+    const [reFore, reAft, reRawFore, reRawAft] = getStripFAALinebreaksRegExps()
 
-      if (stripForeAndAftLinebreaks === FAA_LINEBREAKS_ALL) {
-        reFore = /^[\n\t\s]+/g
-        reAft = /[\n\t\s]+$/g
-      }
+    // Strip prefix
+    reStripElementValue(newStrings[0], reFore)
+    reStripElementValue(newRaws[0], reRawFore)
 
-      newStrings[0].value = newStrings[0].value.repalce(reFore, '')
-      newStrings[len - 1].value = newStrings[len - 1].value.repalce(reAft, '')
+    // Strip suffix
+    reStripElementValue(newStrings[len - 1], reAft)
+    reStripElementValue(newRaws[len - 1], reRawAft)
 
-      return newStrings
+    return [newStrings, newRaws]
+  }
+
+  function applyStripForeAndAftLinebreaksTemplateLiteral(nodes) {
+    const len = nodes.length
+
+    if (len === 0 || isSkipStripFAALinebreaks()) {
+      return nodes
     }
 
-    // Else return origin strings
-    return strings
+    const [reFore, reAft] = getStripFAALinebreaksRegExps()
+    const newNodes = [...nodes]
+
+    // Strip prefix
+    reStripElementValue(newNodes[0], reFore)
+    // Strip suffix
+    reStripElementValue(newNodes[len - 1], reAft)
+
+    return newNodes
   }
 
   return {
@@ -85,12 +143,12 @@ export default declare((api, options) => {
         const { quasi } = node;
 
         let strings = [];
-        const raws = [];
+        let raws = [];
 
         // Flag variable to check if contents of strings and raw are equal
         let isStringsRawEqual = true;
 
-        for (const elem of (quasi.quasis: Array)) {
+        for (const elem of quasi.quasis) {
           const { raw, cooked } = elem.value;
           const value =
             cooked == null
@@ -106,7 +164,8 @@ export default declare((api, options) => {
           }
         }
 
-        strings = applyStripForeAndAftLinebreaks(strings)
+        // Apply `stripForeAndAftLinebreaks` option
+        ;[strings, raws] = applyStripForeAndAftLinebreaksTaggedTemplateExpression(strings, raws)
 
         const scope = path.scope.getProgramParent();
         const templateObject = scope.generateUidIdentifier("templateObject");
@@ -124,7 +183,7 @@ export default declare((api, options) => {
             const data = ${t.callExpression(helperId, callExpressionInput)};
             ${templateObject} = function() { return data };
             return data;
-          } 
+          }
         `;
 
         scope.path.unshiftContainer("body", lazyLoad);
@@ -137,11 +196,11 @@ export default declare((api, options) => {
       },
 
       TemplateLiteral(path) {
-        const nodes = [];
+        let nodes = [];
         const expressions = path.get("expressions");
 
         let index = 0;
-        for (const elem of (path.node.quasis: Array)) {
+        for (const elem of path.node.quasis) {
           if (elem.value.cooked) {
             nodes.push(t.stringLiteral(elem.value.cooked));
           }
@@ -154,6 +213,9 @@ export default declare((api, options) => {
             }
           }
         }
+
+        // Apply `stripForeAndAftLinebreaks` option
+        nodes = applyStripForeAndAftLinebreaksTemplateLiteral(nodes)
 
         // since `+` is left-to-right associative
         // ensure the first node is a string if first/second isn't
