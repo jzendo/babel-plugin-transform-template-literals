@@ -1,6 +1,6 @@
 {
   "name": "@jzendo/babel-plugin-transform-template-literals",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "Compile ES2015 template literals to ES5. It is based on https://github.com/babel/babel/tree/v7.8.6/packages/babel-plugin-transform-template-literals",
   "repository": "https://github.com/jzendo/babel-plugin-transform-template-literals.git",
   "license": "MIT",
@@ -25,6 +25,7 @@
     "@babel/preset-env": "^7.8.6",
     "@rollup/plugin-node-resolve": "^7.1.1",
     "babel-plugin-module-resolver": "^4.0.0",
+    "babel-plugin-transform-template-literals": "./",
     "cross-env": "^7.0.0",
     "jest": "^25.1.0",
     "rollup": "^1.31.1",
@@ -32,6 +33,7 @@
   },
   "scripts": {
     "build": "cross-env NODE_ENV=production rollup -c",
-    "test": "cross-env NODE_ENV=test jest"
+    "link_to_node_modules": "yarn up babel-plugin-transform-template-literals",
+    "test": "yarn build && yarn link_to_node_modules && cross-env NODE_ENV=test jest"
   }
 }
