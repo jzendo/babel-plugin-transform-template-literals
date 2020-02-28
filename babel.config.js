@@ -1,19 +1,22 @@
-let buildEnvConfig = ["@babel/env", { modules: false }]
+let devOrBuildEnvConfig = ["@babel/env", { modules: false }];
 
 let testEnvConfig = [
-  '@babel/preset-env',
+  "@babel/preset-env",
   {
     targets: {
-      node: 'current',
-    },
+      node: "current"
+    }
   }
-]
+];
 
-let envConfig = process.env.NODE_ENV === 'test' ? testEnvConfig : buildEnvConfig
-
-
-module.exports = {
-  presets: [
-    envConfig
-  ]
-};
+if (process.env.NODE_ENV === "test") {
+  // console.log('@Env: test ...')
+  module.exports = {
+    presets: [testEnvConfig]
+  };
+} else {
+  // console.log('@Env: dev/build ...')
+  module.exports = {
+    presets: [devOrBuildEnvConfig]
+  };
+}
