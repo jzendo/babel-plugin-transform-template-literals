@@ -1,6 +1,6 @@
 {
   "name": "@jzendo/babel-plugin-transform-template-literals",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Compile ES2015 template literals to ES5. It is based on https://github.com/babel/babel/tree/v7.8.6/packages/babel-plugin-transform-template-literals",
   "repository": "https://github.com/jzendo/babel-plugin-transform-template-literals.git",
   "license": "MIT",
@@ -14,6 +14,12 @@
   },
   "keywords": [
     "babel-plugin"
+  ],
+  "files": [
+    "lib/",
+    "index.js",
+    "LICENSE",
+    "README.md"
   ],
   "peerDependencies": {
     "@babel/core": "^7.0.0-0"

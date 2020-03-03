@@ -12,6 +12,7 @@ stripForeAndAftLinebreaks:
 ```
 
 ## `babel.config.js/.babelrc` configuration
+
 ```javascript
 {
   plugins: [
