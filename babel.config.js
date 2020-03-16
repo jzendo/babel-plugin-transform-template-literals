@@ -17,6 +17,9 @@ if (process.env.NODE_ENV === "test") {
 } else {
   // console.log('@Env: dev/build ...')
   module.exports = {
-    presets: [devOrBuildEnvConfig]
+    presets: [devOrBuildEnvConfig],
+    plugins: [
+      "@babel/plugin-transform-modules-commonjs"
+    ]
   };
 }
