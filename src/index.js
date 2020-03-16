@@ -1,34 +1,10 @@
 const { declare } = require("@babel/helper-plugin-utils");
 const { template, types: t } = require("@babel/core");
 
-const FAA_LINEBREAKS_NONE = 'none'
-const FAA_LINEBREAKS_ALL = 'all'
-const FAA_LINEBREAKS_DEFAULT = 'default'
-
-const reFAA = {
-  // RE
-  foreOne: /^\n/,
-  foreAll: /^[\n\t\s]+/,
-  aftOne: /\n$/,
-  aftAll: /[\n\t\s]+$/,
-  // Raw RE
-  foreRawOne: /^\\n/,
-  foreRawAll: /^[\\n\\t\\s]+/,
-  aftRawOne: /\\n$/,
-  aftRawAll: /[\\n\\t\\s]+$/,
-}
-
-const getStripRegexp = (isRaw, isAll) => {
-  let reFore = isRaw ? reFAA.foreRawOne : reFAA.foreOne
-  let reAft = isRaw ? reFAA.aftRawOne : reFAA.aftOne
-
-  if (isAll) {
-    reFore = isRaw ? reFAA.foreRawAll : reFAA.foreAll
-    reAft = isRaw ? reFAA.aftRawAll : reFAA.aftAll
-  }
-
-  return [reFore, reAft]
-}
+const {
+  FAA_LINEBREAKS_DEFAULT,
+  getStripForeAndAftLinebreaksHelper
+} = require('./stripForeAndAftLinebreaksHelper')
 
 export default declare((api, options) => {
   api.assertVersion(7);
@@ -72,67 +48,10 @@ export default declare((api, options) => {
     });
   }
 
-  function matchOptionStripForeAndAftLinebreaks(...options) {
-    return options.some(current => current === stripForeAndAftLinebreaks)
-  }
-
-  function isSkipStripFAALinebreaks() {
-    return matchOptionStripForeAndAftLinebreaks(
-      FAA_LINEBREAKS_ALL, FAA_LINEBREAKS_DEFAULT) === false
-  }
-
-  function getStripFAALinebreaksRegExps() {
-    const [reFore, reAft] = getStripRegexp(false, matchOptionStripForeAndAftLinebreaks(FAA_LINEBREAKS_ALL))
-    const [reRawFore, reRawAft] = getStripRegexp(true, matchOptionStripForeAndAftLinebreaks(FAA_LINEBREAKS_ALL))
-    return [
-      reFore, reAft,
-      reRawFore, reRawAft
-    ]
-  }
-
-  function reStripElementValue(ele, re) {
-    if (ele && ele.type === 'StringLiteral') ele.value = ele.value.replace(re, '')
-  }
-
-  function applyStripForeAndAftLinebreaksTaggedTemplateExpression(strings, raws) {
-    const len = strings.length
-
-    if (len === 0 || isSkipStripFAALinebreaks()) {
-      return [strings, raws]
-    }
-
-    const newStrings = [...strings]
-    const newRaws = [...raws]
-    const [reFore, reAft, reRawFore, reRawAft] = getStripFAALinebreaksRegExps()
-
-    // Strip prefix
-    reStripElementValue(newStrings[0], reFore)
-    reStripElementValue(newRaws[0], reRawFore)
-
-    // Strip suffix
-    reStripElementValue(newStrings[len - 1], reAft)
-    reStripElementValue(newRaws[len - 1], reRawAft)
-
-    return [newStrings, newRaws]
-  }
-
-  function applyStripForeAndAftLinebreaksTemplateLiteral(nodes) {
-    const len = nodes.length
-
-    if (len === 0 || isSkipStripFAALinebreaks()) {
-      return nodes
-    }
-
-    const [reFore, reAft] = getStripFAALinebreaksRegExps()
-    const newNodes = [...nodes]
-
-    // Strip prefix
-    reStripElementValue(newNodes[0], reFore)
-    // Strip suffix
-    reStripElementValue(newNodes[len - 1], reAft)
-
-    return newNodes
-  }
+  const {
+    applyStripForeAndAftLinebreaksTemplateLiteral,
+    applyStripForeAndAftLinebreaksTaggedTemplateExpression
+  } = getStripForeAndAftLinebreaksHelper(stripForeAndAftLinebreaks)
 
   return {
     name: "transform-template-literals",

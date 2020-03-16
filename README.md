@@ -1,6 +1,6 @@
 # babel-plugin-transform-template-literals
 
-Support new option `stripForeAndAftLinebreaks`, for detail:
+## Support new option
 
 ```javascript
 
@@ -17,7 +17,7 @@ stripForeAndAftLinebreaks:
 {
   plugins: [
     [
-      require('babel-plugin-transform-template-literals'),
+      require('@jzendo/babel-plugin-transform-template-literals'),
       {
         // ['none', 'default', 'all'], default: 'default'
         stripForeAndAftLinebreaks: 'none'
@@ -27,9 +27,9 @@ stripForeAndAftLinebreaks:
 }
 ```
 
-## samples
+## Samples
 
-stripForeAndAftLinebreaks: none
+**stripForeAndAftLinebreaks**: none
 
 ```javascript
 /** ES6 */
@@ -43,7 +43,7 @@ var a = '\n\nabc\n'
 
 ```
 
-stripForeAndAftLinebreaks: default
+**stripForeAndAftLinebreaks**: default
 
 ```javascript
 /** ES6 */
@@ -57,7 +57,7 @@ var a = '\nabc'
 
 ```
 
-stripForeAndAftLinebreaks: all
+**stripForeAndAftLinebreaks**: all
 
 ```javascript
 /** ES6 */
@@ -74,26 +74,25 @@ var a = 'abc'
 ## Using plugin
 
 ```sh
-npm install -D babel-plugin-transform-template-literals
+npm install -D @jzendo/babel-plugin-transform-template-literals
 ```
 
 or
 
 ```sh
-yarn add -D babel-plugin-transform-template-literals
+yarn add -D @jzendo/babel-plugin-transform-template-literals
 ```
 
-
-Fork: https://github.com/babel/babel/tree/v7.8.6/packages/babel-plugin-transform-template-literals
+Fork: <https://github.com/babel/babel/tree/v7.8.6/packages/babel-plugin-transform-template-literals>
 
 >
-> # @babel/plugin-transform-template-literals
+> ## @babel/plugin-transform-template-literals
 >
 > Compile ES2015 template literals to ES5
 >
 > See our website [@babel/plugin-transform-template-literals](https://babeljs.io/docs/en/next/babel-plugin-transform-template-literals.html) for more information.
 >
-> ## Install
+> ### Install
 >
 > Using npm:
 >
