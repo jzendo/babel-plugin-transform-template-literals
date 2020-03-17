@@ -1,10 +1,7 @@
 const { declare } = require("@babel/helper-plugin-utils");
 const { template, types: t } = require("@babel/core");
 
-const {
-  FAA_LINEBREAKS_DEFAULT,
-  getStripForeAndAftLinebreaksHelper
-} = require('./stripForeAndAftLinebreaksHelper')
+const { FAA_LINEBREAKS_DEFAULT, getStripForeAndAftLinebreaksHelper } = require('./stripForeAndAftLinebreaksHelper')
 
 export default declare((api, options) => {
   api.assertVersion(7);

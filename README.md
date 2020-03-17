@@ -1,13 +1,13 @@
-# babel-plugin-transform-template-literals
+# @jzendo/babel-plugin-transform-template-literals
 
-## Support new option
+## Support `stripForeAndAftLinebreaks` option
 
 ```javascript
 
 stripForeAndAftLinebreaks:
-  "none" // None
-  "all"  // Strip fore-and-aft /^[\n|\t|\s]+|[\n|\t|\s]+$/
-  "default"  // Strip fore-and-aft /^[\n]|[\n]$/
+  "none"    // None
+  "all"     // Strip all fore-and-aft /^[\n|\t|\s]+|[\n|\t|\s]+$/
+  "default" // Strip only one fore-and-aft /^[\n]|[\n]$/
 
 ```
 
